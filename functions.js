@@ -10,8 +10,11 @@ const books = require("./books.json");
  ****************************************************************/
 function getBookById(bookId, books) {
   // Your code goes here
+  filteredBook = books.find((x) => x.id == bookId);
+  return filteredBook;
 }
-// console.log(getBookById(12, books));
+
+console.log(getBookById(12, books));
 
 /**************************************************************
  * getAuthorByName(authorName, authors):
@@ -22,8 +25,10 @@ function getBookById(bookId, books) {
  ****************************************************************/
 function getAuthorByName(authorName, authors) {
   // Your code goes here
+  findAuthor = authors.find((x) => x.name == authorName);
+  return findAuthor;
 }
-// console.log(getAuthorByName("J.K. Rowling", authors));
+console.log(getAuthorByName("J.K. Rowling", authors));
 
 /**************************************************************
  * bookCountsByAuthor(authors):
@@ -32,9 +37,15 @@ function getAuthorByName(authorName, authors) {
  *    [{ author: <NAME>, bookCount: <NUMBER_OF_BOOKS> }]
  ****************************************************************/
 function bookCountsByAuthor(authors) {
-  // Your code goes here
+  const bookCount = authors.map((x) => {
+    return {
+      author: x.name,
+      bookCount: x.books.length,
+    };
+  });
+  return bookCount;
 }
-// console.log(bookCountsByAuthor(authors));
+console.log(bookCountsByAuthor(authors));
 
 /**************************************************************
  * booksByColor(books):
@@ -44,13 +55,22 @@ function bookCountsByAuthor(authors) {
  *    { <COLOR>: [<BOOK_TITLES>] }
  ****************************************************************/
 function booksByColor(books) {
-  const colors = {};
-
-  // Your code goes here
-
-  return colors;
+  const colorValue = [...new Set(books.map((x) => x.color))];
+  const colorObj = colorValue.reduce((acc, val) => {
+    return { ...acc, [val]: [] };
+  }, {});
+  books.forEach((x) => {
+    for (i = 0; i < colorValue.length; i++) {
+      if (x.color == colorValue[i]) {
+        colorObj[colorValue[i]].push(x.title);
+      }
+    }
+  });
+  return colorObj;
 }
-// console.log(booksByColor(books));
+
+// return colors;
+console.log(booksByColor(books));
 
 /**************************************************************
  * titlesByAuthorName(authorName, authors, books):
@@ -62,8 +82,17 @@ function booksByColor(books) {
  ****************************************************************/
 function titlesByAuthorName(authorName, authors, books) {
   // Your code goes here
+  authArr = [];
+  const author = getAuthorByName(authorName, authors);
+  books.forEach((x) => {
+    if (author.books.includes(x.id)) {
+      authArr.push(x.title);
+    }
+  });
+  return authArr;
 }
-// console.log(titlesByAuthorName("George R.R. Martin", authors, books));
+
+console.log(titlesByAuthorName("George R.R. Martin", authors, books));
 
 /**************************************************************
  * mostProlificAuthor(authors):
@@ -74,8 +103,11 @@ function titlesByAuthorName(authorName, authors, books) {
  ****************************************************************/
 function mostProlificAuthor(authors) {
   // Your code goes here
+  const bookTotal = [...new Set(authors.map((x) => x.books.length))];
+  let bookMax = Math.max(...bookTotal);
+  return authors.find((x) => bookMax == x.books.length).name;
 }
-// console.log(mostProlificAuthor(authors));
+console.log(mostProlificAuthor(authors));
 
 /**************************************************************
  * relatedBooks(bookId, authors, books):
@@ -102,8 +134,19 @@ function mostProlificAuthor(authors) {
  ****************************************************************/
 function relatedBooks(bookId, authors, books) {
   // Your code goes here
+  const titleArr = [];
+  const authorFind = books
+    .find((x) => x.id == bookId)
+    .authors.map((x) => x.name);
+  for (i = 0; i < authorFind.length; i++) {
+    titlesByAuthorName(authorFind[i], authors, books).forEach((x) =>
+      titleArr.push(x)
+    );
+  }
+  const titleUnique = [...new Set(titleArr)];
+  return titleUnique;
 }
-// console.log(relatedBooks(50, authors, books));
+console.log(relatedBooks(50, authors, books));
 
 /**************************************************************
  * friendliestAuthor(authors):
@@ -113,8 +156,29 @@ function relatedBooks(bookId, authors, books) {
  ****************************************************************/
 function friendliestAuthor(authors) {
   // Your code goes here
+  // Get co-authored book IDs
+  coAuthBooks = authors
+    .map((x) => x.books)
+    .flat()
+    .filter((e, i, a) => a.indexOf(e) !== i);
+  // Get author Objects with co-authored books
+  coAuth = authors.filter((x) => {
+    return x.books.some((x) => coAuthBooks.indexOf(x) >= 0);
+  });
+  // Add co-authered book counts
+  coAuth.forEach((x) => (x.coAuthorCount = 0));
+  for (i = 0; i < coAuth.length; i++) {
+    for (j = 0; j < coAuthBooks.length; j++) {
+      if (coAuth[i].books.includes(coAuthBooks[j])) {
+        coAuth[i].coAuthorCount++;
+      }
+    }
+  }
+  // find book authored with the most co-authored books
+  mostCoAuthor = Math.max(...[...new Set(coAuth.map((x) => x.coAuthorCount))]);
+  return coAuth.find((X) => mostCoAuthor === X.coAuthorCount).name;
 }
-// console.log(friendliestAuthor(authors));
+console.log(friendliestAuthor(authors));
 
 module.exports = {
   getBookById,
